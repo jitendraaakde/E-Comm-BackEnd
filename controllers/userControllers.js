@@ -60,7 +60,11 @@ const signupController = async (req, res) => {
         res.status(500).json({ message: 'Server error. Please try again later.' });
     }
 };
+const googleAuth = async (req, res) => {
+    console.log(req.body)
+    res.send({ msg: 'user created by google' })
+}
 module.exports = {
     loginController,
-    signupController
+    signupController, googleAuth
 };
