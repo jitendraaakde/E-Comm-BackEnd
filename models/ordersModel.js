@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
-const cartSchema = new mongoose.Schema({
+const orderSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    items: [{
+    products: [{
         productId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Product',
@@ -18,7 +18,7 @@ const cartSchema = new mongoose.Schema({
             min: 1
         },
         size: {
-            type: mongoose.Schema.Types.ObjectId, // Correct reference to 'Size'
+            type: mongoose.Schema.Types.ObjectId,
             ref: 'Size',
             required: true
         },
@@ -28,6 +28,16 @@ const cartSchema = new mongoose.Schema({
             min: 0
         }
     }],
+    orderStatus: {
+        type: String,
+        enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'],
+        default: 'pending'
+    },
+    shippingAddress: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Address',
+        required: true
+    }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Cart', cartSchema);
+module.exports = mongoose.model('Order', orderSchema);
