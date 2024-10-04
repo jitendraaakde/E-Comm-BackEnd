@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+
 const orderSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -20,7 +21,6 @@ const orderSchema = new mongoose.Schema({
         size: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Size',
-            required: true
         },
         amount: {
             type: Number,
@@ -39,5 +39,4 @@ const orderSchema = new mongoose.Schema({
         required: true
     }
 }, { timestamps: true });
-
-module.exports = mongoose.model('Order', orderSchema);
+module.exports = mongoose.model('Orders', orderSchema);

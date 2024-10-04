@@ -14,7 +14,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());  // Use cookieParser before defining routes
 
 // Routes
-app.use(userRoutes);
+app.use('/api/users/', userRoutes);
 
 // Start the server
 const PORT = 3000;

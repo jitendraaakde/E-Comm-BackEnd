@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+
 const productSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -9,7 +10,7 @@ const productSchema = new mongoose.Schema({
     description: {
         type: String,
         required: true,
-        trim: true // good for consistent formatting
+        trim: true
     },
     price: {
         type: Number,
@@ -19,7 +20,7 @@ const productSchema = new mongoose.Schema({
     discountPrice: {
         type: Number,
         min: 0,
-        default: null // Optional for products with no discount
+        default: null
     },
     brand: {
         type: mongoose.Schema.Types.ObjectId,
@@ -34,7 +35,6 @@ const productSchema = new mongoose.Schema({
     images: [
         {
             url: { type: String, required: true },
-            altText: { type: String, trim: true }
         }
     ],
     sizes: [
@@ -46,9 +46,10 @@ const productSchema = new mongoose.Schema({
     category: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Category'
+            ref: 'Category',
+            required: true // Added required field
         }
     ]
 }, { timestamps: true });
 
-module.exports = mongoose.model('Product', productSchema);
+module.exports = mongoose.model('Products', productSchema);

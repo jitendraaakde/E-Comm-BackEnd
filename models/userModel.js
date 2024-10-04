@@ -17,15 +17,13 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     phone: {
-        type: Number,
-        unique: true,
-        sparse: true, // ensures uniqueness only when present
+        type: String,
     },
     role: {
         type: String,
         default: 'user',
         enum: ['user', 'admin']
     }
-}, { timestamps: true });
+}, { timestamps: true, versionKey: false });
 
 module.exports = mongoose.model('User', userSchema);

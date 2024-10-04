@@ -1,8 +1,8 @@
-const { Schema, Model, default: mongoose } = require('mongoose');
-
+const mongoose = require('mongoose')
 const brandSchema = new Schema({
     name: {
-        type: String
+        type: String,
+        required: true // Added required field
     }
-})
-module.exports = mongoose.model('Brand', brandSchema);
+});
+module.exports = new mongoose.model('Brand', brandSchema)
