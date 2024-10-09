@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-
 const productSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -17,10 +16,10 @@ const productSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
-    discountPrice: {
+    discountPercentage: {
         type: Number,
         min: 0,
-        default: null
+        default: 0
     },
     brand: {
         type: mongoose.Schema.Types.ObjectId,
@@ -47,9 +46,9 @@ const productSchema = new mongoose.Schema({
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Category',
-            required: true // Added required field
+            required: true
         }
     ]
 }, { timestamps: true });
 
-module.exports = mongoose.model('Products', productSchema);
+module.exports = mongoose.model('Product', productSchema);
