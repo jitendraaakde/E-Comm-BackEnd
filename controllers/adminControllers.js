@@ -54,9 +54,43 @@ const getCategory = async (req, res) => {
     res.json({ msg: 'category from back', categories },)
 }
 const addCategory = async (req, res) => {
-    console.log(req.body)
-    // const res = await Category.create({ name:})
-    res.json({ msg: 'category added' })
+    const { name } = req.body;
+    const response = await Category.create({ name: name })
+
+    return res.json({ msg: 'category added', name: response.name })
+}
+const getAllProduct = async (req, res) => {
+    const page = parseInt(req.query.page) || 1; // Page number from query params (default is 1)
+    const limit = parseInt(req.query.limit) || 10; // Number of products per page (default is 10)
+    const skip = (page - 1) * limit;
+
+    try {
+        const products = await Product.find()
+            .populate('brand')
+            .populate('sizes')
+            .populate('category')
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+
+        const totalProducts = await Product.countDocuments();
+
+        res.status(200).json({
+            products,
+            currentPage: page,
+            totalPages: Math.ceil(totalProducts / limit),
+            totalProducts,
+        });
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        res.status(500).json({ message: 'Failed to fetch products' });
+    }
+};
+
+const deleteProduct = async (req, res) => {
+    const id = req.params.id;
+    const response = await Product.deleteOne({ _id: id })
+    res.json({ msg: 'One product deleted' })
 }
 
-module.exports = { addProduct, getCategory, addCategory };
+module.exports = { addProduct, getCategory, addCategory, getAllProduct, deleteProduct };
