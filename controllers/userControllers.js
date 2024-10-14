@@ -121,9 +121,39 @@ const googleAuth = async (req, res) => {
     }
 };
 
+const editUserData = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const updatedData = req.body;
+
+        console.log('UserID:', userId, 'Updated Data:', updatedData);
+
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { $set: updatedData },
+            { new: true, runValidators: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        console.log('Updated user:', user);
+        res.json({ msg: 'User updated successfully', user });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ msg: 'Server error' });
+    }
+};
+
+const getUserAddresses = (req, res) => {
+    console.log('user addresses requets ')
+    res.json({ msg: "send user addresses" })
+}
+
 
 
 module.exports = {
     loginController,
-    signupController, googleAuth
+    signupController, googleAuth, editUserData, getUserAddresses
 };
