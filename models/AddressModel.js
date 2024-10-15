@@ -6,15 +6,6 @@ const addressSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
-    phone: {
-        type: Number,
-        validate: {
-            validator: function (v) {
-                return /^[0-9]{10,15}$/.test(v);
-            },
-            message: 'Phone number must be between 10 and 15 digits.'
-        }
-    },
     street: {
         type: String,
         required: true
@@ -37,8 +28,8 @@ const addressSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['home', 'work', 'other'],
-        default: 'home'
+        enum: ['Home', 'Work', 'Other'],
+        default: 'Home'
     }
 }, { timestamps: true });
 
