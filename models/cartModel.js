@@ -15,17 +15,13 @@ const cartSchema = new mongoose.Schema({
         quantity: {
             type: Number,
             required: true,
-            min: 1
+            min: 1,
+            default: 1
         },
         size: {
-            type: mongoose.Schema.Types.ObjectId, // Correct reference to 'Size'
+            type: mongoose.Schema.Types.ObjectId,
             ref: 'Size',
             required: true
-        },
-        amount: {
-            type: Number,
-            required: true,
-            min: 0
         }
     }],
 }, { timestamps: true });

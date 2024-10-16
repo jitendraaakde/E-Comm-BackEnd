@@ -5,6 +5,7 @@ const { dbConnect } = require('./db/dbConnection');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const adminRoutes = require('./routes/adminRoutes')
+const productRoutes = require('./routes/productRoutes')
 
 // Connect to the database
 dbConnect();
@@ -17,6 +18,7 @@ app.use(cookieParser());  // Use cookieParser before defining routes
 // Routes
 app.use('/api/users/', userRoutes);
 app.use('/api/admin/', adminRoutes);
+app.use('/api/product/', productRoutes);
 
 // Start the server
 const PORT = 3000;

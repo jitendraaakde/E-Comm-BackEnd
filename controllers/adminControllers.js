@@ -4,7 +4,6 @@ const Product = require('../models/productModel');
 const Size = require('../models/sizeModel');
 
 const addProduct = async (req, res) => {
-    console.log('Form data which comes', req.body);
     const { brand, categories, sizes, imageUrls, ...productData } = req.body;
 
     try {
@@ -13,7 +12,6 @@ const addProduct = async (req, res) => {
             brandData = await Brand.create({ name: brand });
         }
 
-        //  Handle Categories
         const categoryIds = [];
         for (let categoryName of categories) {
             let categoryData = await Category.findOne({ name: categoryName });
@@ -23,7 +21,6 @@ const addProduct = async (req, res) => {
             categoryIds.push(categoryData._id);
         }
 
-        //  Handle Sizes
         const sizeArr = [];
         for (let size of sizes) {
             let sizeObj = await Size.findOne({ size: size });
@@ -33,7 +30,6 @@ const addProduct = async (req, res) => {
             sizeArr.push(sizeObj._id);
         }
 
-        //  Create the product
         const newProduct = new Product({
             ...productData,
             brand: brandData._id,

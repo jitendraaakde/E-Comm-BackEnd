@@ -240,13 +240,30 @@ const changeUserPassword = async (req, res) => {
 const deleteUser = async (req, res) => {
     try {
         const { userId } = req.user;
+
         let user = await User.findById(userId);
+
         if (!user) {
-            return res.status(404).json({ msg: 'User not found. Please login again.', success: true });
+            return res.status(404).json({ msg: 'User not found. Please login again.', success: false });
         }
+
+        console.log(`Deleting user with ID: ${userId}`);
+
         const response = await User.deleteOne({ _id: userId });
 
-        return res.status(200).json({ msg: 'User deleted successfully', success: true, });
+        if (response.deletedCount === 0) {
+            return res.status(500).json({ msg: 'Failed to delete user. Please try again.', success: false });
+        }
+
+        res.clearCookie('token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+        });
+
+        console.log(`User ${userId} deleted and token cookie cleared.`);
+
+        return res.status(200).json({ msg: 'User deleted successfully', success: true });
 
     } catch (error) {
         console.error('Error deleting user:', error);
@@ -254,10 +271,20 @@ const deleteUser = async (req, res) => {
     }
 };
 
+const logoutUser = (req, res) => {
+    console.log('user logout')
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+    });
+    return res.status(200).json({ success: true, message: 'Logged out successfully' });
+}
+
 
 
 
 module.exports = {
     loginController,
-    signupController, googleAuth, editUserData, getUserAddresses, addUserAddresses, deleteUserAddresses, changeUserPassword, deleteUser
+    signupController, googleAuth, editUserData, getUserAddresses, addUserAddresses, deleteUserAddresses, changeUserPassword, deleteUser, logoutUser
 };
