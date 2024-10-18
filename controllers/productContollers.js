@@ -1,11 +1,11 @@
 const Product = require("../models/productModel")
 const Cart = require('../models/cartModel')
 const mongoose = require('mongoose');
+const Size = require("../models/sizeModel");
 
 const getSingleProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        console.log('product Id ', id)
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ msg: 'Invalid product ID' });
         }
@@ -24,8 +24,6 @@ const getSingleProduct = async (req, res) => {
         return res.status(500).json({ msg: 'Server error', error });
     }
 };
-
-
 
 const addProductCart = async (req, res) => {
     const { pid, size, quantity = 1 } = req.body;
@@ -52,21 +50,154 @@ const addProductCart = async (req, res) => {
 
         await cart.save();
 
-        res.status(200).json({ message: 'Product added to cart', cart, success: true });
+        const populatedCart = await Cart.findOne({ userId }).
+            populate('items.size')
+            .populate({
+                path: 'items.productId',
+                populate: [
+                    { path: 'brand' },
+                    { path: 'sizes' }
+                ]
+            })
+
+        res.status(200).json({
+            message: 'Product added to cart',
+            cart: populatedCart,
+            success: true
+        });
     } catch (error) {
         console.error('Error adding product to cart:', error);
-        res.status(500).json({ message: 'Failed to add product to cart', error });
+        res.status(500).json({
+            message: 'Failed to add product to cart',
+            error
+        });
     }
-}
+};
 
 const getProductCart = async (req, res) => {
     const { userId } = req.user
     try {
         const cart = await Cart.findOne({ userId })
+            .populate('items.size')
+            .populate({
+                path: 'items.productId',
+                populate: [
+                    { path: 'brand' },
+                    { path: 'sizes' }
+                ]
+            })
         return res.json({ msg: 'product fetch success', cart: cart.items })
     } catch (e) {
         console.log(e)
     }
 }
 
-module.exports = { getSingleProduct, addProductCart, getProductCart }
+const removeCartItem = async (req, res) => {
+    const { userId } = req.user;
+    const { id: productId } = req.params;
+
+    try {
+        let cart = await Cart.findOne({ userId }).populate('items.size')
+            .populate({
+                path: 'items.productId',
+                populate: [
+                    { path: 'brand' },
+                    { path: 'sizes' }
+                ]
+            });
+
+
+        if (!cart) {
+            return res.status(404).json({ message: 'Cart not found' });
+        }
+
+        const itemToRemove = cart.items.find(item => item._id.toString() === productId);
+        if (!itemToRemove) {
+            return res.status(404).json({ message: 'Item not found in cart' });
+        }
+
+        cart.items = cart.items.filter(item => item._id.toString() !== productId);
+
+        await cart.save();
+
+        const updatedCart = await Cart.findOne({ userId })
+            .populate('items.size')
+            .populate({
+                path: 'items.productId',
+                populate: [
+                    { path: 'brand' },
+                    { path: 'sizes' }
+                ]
+            });
+
+        res.status(200).json({
+            message: 'Item deleted from cart',
+            cart: updatedCart.items,
+        });
+    } catch (error) {
+        console.error('Error removing item from cart:', error);
+        res.status(500).json({ message: 'Failed to remove item from cart', error });
+    }
+};
+const updateCartItem = async (req, res) => {
+    const { userId } = req.user;
+    const { id } = req.params;
+    const { property, value } = req.body;
+    try {
+        let cart = await Cart.findOne({ userId });
+
+        if (!cart) {
+            return res.status(404).json({ message: 'Cart not found' });
+        }
+        const item = cart.items.find(item => item._id.toString() === id);
+        if (!item) {
+            return res.status(404).json({ message: 'Item not found in cart' });
+        }
+
+        if (property === 'quantity') {
+            if (value < 1) {
+                return res.status(400).json({ message: 'Quantity must be at least 1' });
+            }
+            item.quantity = value;
+        } else if (property === 'size') {
+            try {
+                const selectedSizeId = new mongoose.Types.ObjectId(value);
+
+                const sizeObject = await Size.findById(selectedSizeId);
+                if (!sizeObject) {
+                    return res.status(404).json({ message: 'Size not found' });
+                }
+                item.size = sizeObject;
+                await cart.save();
+            } catch (error) {
+                console.error('Error updating size:', error);
+                return res.status(500).json({ message: 'Failed to update size', error });
+            }
+        }
+
+
+        await cart.save();
+
+        const updatedCart = await Cart.findOne({ userId })
+            .populate('items.size')
+            .populate({
+                path: 'items.productId',
+                populate: [
+                    { path: 'brand' },
+                    { path: 'sizes' }
+                ]
+            });
+
+        res.status(200).json({
+            message: 'Cart updated successfully',
+            cart: updatedCart.items,
+        });
+    } catch (error) {
+        console.error('Error updating cart item:', error);
+        res.status(500).json({ message: 'Failed to update cart item', error });
+    }
+};
+
+
+
+module.exports = { getSingleProduct, addProductCart, getProductCart, removeCartItem, updateCartItem }

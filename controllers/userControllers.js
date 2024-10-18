@@ -4,7 +4,6 @@ const User = require('../models/userModel');
 const Address = require('../models/AddressModel');
 
 const loginController = async (req, res) => {
-    console.log('login ', req.body);
     const { email, password } = req.body;
 
     try {
@@ -30,7 +29,6 @@ const loginController = async (req, res) => {
 
         const { passwordHash, ...userResponse } = user._doc;
 
-        console.log('User which comes from db', userResponse);
 
         res.status(200).json({ message: 'Login successful.', user: userResponse });
     } catch (error) {
@@ -41,7 +39,6 @@ const loginController = async (req, res) => {
 
 
 const signupController = async (req, res) => {
-    console.log('signup', req.body);
     const { name, email, passwordHash } = req.body;
 
     try {
@@ -67,7 +64,6 @@ const signupController = async (req, res) => {
             email,
             passwordHash: hashedPassword,
         });
-        console.log(newUser)
         await newUser.save();
 
         res.status(201).json({
@@ -124,7 +120,6 @@ const editUserData = async (req, res) => {
         const userId = req.user.userId;
         const updatedData = req.body;
 
-        console.log('UserID:', userId, 'Updated Data:', updatedData);
 
         const user = await User.findByIdAndUpdate(
             userId,
@@ -136,7 +131,6 @@ const editUserData = async (req, res) => {
             return res.status(404).json({ msg: 'User not found' });
         }
 
-        console.log('Updated user:', user);
         res.json({ msg: 'User updated successfully', user });
     } catch (error) {
         console.error('Error updating user:', error);
@@ -247,7 +241,6 @@ const deleteUser = async (req, res) => {
             return res.status(404).json({ msg: 'User not found. Please login again.', success: false });
         }
 
-        console.log(`Deleting user with ID: ${userId}`);
 
         const response = await User.deleteOne({ _id: userId });
 
@@ -261,7 +254,6 @@ const deleteUser = async (req, res) => {
             sameSite: 'strict',
         });
 
-        console.log(`User ${userId} deleted and token cookie cleared.`);
 
         return res.status(200).json({ msg: 'User deleted successfully', success: true });
 
@@ -272,7 +264,6 @@ const deleteUser = async (req, res) => {
 };
 
 const logoutUser = (req, res) => {
-    console.log('user logout')
     res.clearCookie('token', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
