@@ -33,46 +33,50 @@ const addProductCart = async (req, res) => {
         let cart = await Cart.findOne({ userId });
 
         if (cart) {
-            const existingItem = cart.items.find(item => item.productId.toString() === pid);
+            const sizeId = size._id ? size._id.toString() : size.toString();
+
+            const existingItem = cart.items.find(
+                item =>
+                    item.productId.toString() === pid &&
+                    item.size.toString() === sizeId
+            );
 
             if (existingItem) {
-                existingItem.size = size;
                 existingItem.quantity += quantity;
             } else {
-                cart.items.push({ productId: pid, size, quantity });
+                cart.items.push({ productId: pid, size: sizeId, quantity });
             }
         } else {
             cart = new Cart({
                 userId,
-                items: [{ productId: pid, size, quantity }],
+                items: [{ productId: pid, size: size._id || size, quantity }],
             });
         }
 
         await cart.save();
 
-        const populatedCart = await Cart.findOne({ userId }).
-            populate('items.size')
+        const populatedCart = await Cart.findOne({ userId })
+            .populate('items.size')
             .populate({
                 path: 'items.productId',
-                populate: [
-                    { path: 'brand' },
-                    { path: 'sizes' }
-                ]
-            })
+                populate: [{ path: 'brand' }, { path: 'sizes' }],
+            });
 
         res.status(200).json({
             message: 'Product added to cart',
             cart: populatedCart,
-            success: true
+            success: true,
         });
     } catch (error) {
         console.error('Error adding product to cart:', error);
         res.status(500).json({
             message: 'Failed to add product to cart',
-            error
+            error,
         });
     }
 };
+
+
 
 const getProductCart = async (req, res) => {
     const { userId } = req.user

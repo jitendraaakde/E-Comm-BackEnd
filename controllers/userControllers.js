@@ -3,41 +3,6 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const Address = require('../models/AddressModel');
 
-const loginController = async (req, res) => {
-    const { email, password } = req.body;
-
-    try {
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(401).json({ message: 'User not exist please signup' });
-        }
-        const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-
-        if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Invalid password.' });
-        }
-        const token = jwt.sign(
-            {
-                userId: user._id,
-            },
-            process.env.JWT_SECRET);
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'Strict'
-        });
-
-        const { passwordHash, ...userResponse } = user._doc;
-
-
-        res.status(200).json({ message: 'Login successful.', user: userResponse });
-    } catch (error) {
-        console.error('Login error:', error.message);
-        res.status(500).json({ message: 'Server error. Please try again later.' });
-    }
-};
-
-
 const signupController = async (req, res) => {
     const { name, email, passwordHash } = req.body;
 
@@ -75,6 +40,41 @@ const signupController = async (req, res) => {
         res.status(500).json({ message: 'Server error. Please try again later.' });
     }
 };
+
+const loginController = async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).json({ message: 'User not exist please signup' });
+        }
+        const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Invalid password.' });
+        }
+        const token = jwt.sign(
+            {
+                userId: user._id,
+            },
+            process.env.JWT_SECRET);
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict'
+        });
+
+        const { passwordHash, ...userResponse } = user._doc;
+
+
+        res.status(200).json({ message: 'Login successful.', user: userResponse });
+    } catch (error) {
+        console.error('Login error:', error.message);
+        res.status(500).json({ message: 'Server error. Please try again later.' });
+    }
+};
+
 
 const googleAuth = async (req, res) => {
     const { name, email } = req.body;
