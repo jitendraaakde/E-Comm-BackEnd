@@ -2,42 +2,101 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const Address = require('../models/AddressModel');
+const Otp = require('../models/OtpModel');
+const { emailService } = require('../utils/email');
 
 const signupController = async (req, res) => {
     const { name, email, passwordHash } = req.body;
-
     try {
         if (!passwordHash) {
-            return res.json(
-                {
-                    success: false,
-                    message: 'Password is required.',
-                });
-        }
-
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.json({
-                success: true,
-                message: 'User already registered. Please login.',
+            return res.status(400).json({
+                success: false,
+                message: 'Password is required.',
             });
         }
-
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'User already registered. Please log in.',
+            });
+        }
         const hashedPassword = await bcrypt.hash(passwordHash, 10);
         const newUser = new User({
             name,
             email,
             passwordHash: hashedPassword,
         });
+
         await newUser.save();
 
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+        const otpData = await Otp.create({
+            userId: newUser._id,
+            otp,
+            expiresAt,
+        });
+
+        emailService(email, otp);
         res.status(201).json({
             success: true,
-            message: 'User registered successfully. Please log in.',
+            message: 'User registered successfully. OTP sent to your email.',
         });
     } catch (error) {
         console.error('Signup error:', error.message);
-        res.status(500).json({ message: 'Server error. Please try again later.' });
+        res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again later.',
+        });
+    }
+};
+
+const otpController = async (req, res) => {
+    const { otp, email } = req.body;
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'User not found.' });
+        }
+
+        const otpData = await Otp.findOne({ userId: user._id });
+        if (!otpData) {
+            return res.status(400).json({ success: false, message: 'OTP not found.' });
+        }
+        if (otpData.otp.toString() !== otp) {
+            return res.status(400).json({ success: false, message: 'Invalid OTP.' });
+        }
+
+        if (otpData.expiresAt < new Date()) {
+            return res.status(400).json({ success: false, message: 'OTP expired. Please request a new one.' });
+        }
+
+        user.isVerified = true;
+        await user.save();
+
+        await Otp.deleteOne({ userId: user._id });
+
+        const token = jwt.sign(
+            {
+                userId: user._id,
+            },
+            process.env.JWT_SECRET);
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict'
+        });
+
+        const { passwordHash, ...userResponse } = user._doc;
+
+
+        res.status(200).json({ message: 'OTP verified, Login successful.', user: userResponse });
+
+    } catch (error) {
+        console.error('OTP verification error:', error.message);
+        res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
     }
 };
 
@@ -183,8 +242,6 @@ const addUserAddresses = async (req, res) => {
     }
 };
 
-
-
 const deleteUserAddresses = async (req, res) => {
     try {
         const id = req.params.id;
@@ -277,5 +334,5 @@ const logoutUser = (req, res) => {
 
 module.exports = {
     loginController,
-    signupController, googleAuth, editUserData, getUserAddresses, addUserAddresses, deleteUserAddresses, changeUserPassword, deleteUser, logoutUser
+    signupController, googleAuth, editUserData, getUserAddresses, addUserAddresses, deleteUserAddresses, changeUserPassword, deleteUser, logoutUser, otpController
 };

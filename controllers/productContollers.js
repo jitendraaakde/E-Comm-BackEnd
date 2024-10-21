@@ -76,8 +76,6 @@ const addProductCart = async (req, res) => {
     }
 };
 
-
-
 const getProductCart = async (req, res) => {
     const { userId } = req.user
     try {
@@ -202,6 +200,11 @@ const updateCartItem = async (req, res) => {
     }
 };
 
+const filters = (req, res) => {
+    console.log('req.body of filter', req.body)
+    return res.json({ msg: 'filter fetch success' })
+}
 
 
-module.exports = { getSingleProduct, addProductCart, getProductCart, removeCartItem, updateCartItem }
+
+module.exports = { getSingleProduct, addProductCart, getProductCart, removeCartItem, updateCartItem, filters }
