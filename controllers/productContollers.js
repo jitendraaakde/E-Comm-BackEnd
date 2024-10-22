@@ -78,6 +78,9 @@ const addProductCart = async (req, res) => {
 
 const getProductCart = async (req, res) => {
     const { userId } = req.user
+    if (!userId) {
+        return res.json({ msg: 'user not logged in' })
+    }
     try {
         const cart = await Cart.findOne({ userId })
             .populate('items.size')
@@ -88,6 +91,9 @@ const getProductCart = async (req, res) => {
                     { path: 'sizes' }
                 ]
             })
+        if (!cart) {
+            return res.json({ msg: 'cart is empty' })
+        }
         return res.json({ msg: 'product fetch success', cart: cart.items })
     } catch (e) {
         console.log(e)

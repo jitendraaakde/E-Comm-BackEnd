@@ -92,7 +92,7 @@ const otpController = async (req, res) => {
         const { passwordHash, ...userResponse } = user._doc;
 
 
-        res.status(200).json({ message: 'OTP verified, Login successful.', user: userResponse });
+        res.status(200).json({ message: 'OTP verified, Login successful.', success: true, user: userResponse });
 
     } catch (error) {
         console.error('OTP verification error:', error.message);
