@@ -2,6 +2,9 @@ const Product = require("../models/productModel")
 const Cart = require('../models/cartModel')
 const mongoose = require('mongoose');
 const Size = require("../models/sizeModel");
+const Category = require('../models/categoryModel')
+const Brand = require('../models/brandModel')
+
 
 const getSingleProduct = async (req, res) => {
     try {
@@ -206,11 +209,30 @@ const updateCartItem = async (req, res) => {
     }
 };
 
-const filters = (req, res) => {
-    console.log('req.body of filter', req.body)
-    return res.json({ msg: 'filter fetch success' })
+
+const getCategoryBrandSize = async (req, res) => {
+    console.log('Category, Brand, and Size fetch request received');
+    try {
+        const categories = await Category.find({});
+        const brands = await Brand.find({});
+        const sizes = await Size.find({});
+
+        return res.status(200).json({
+            msg: 'Data fetch successful',
+            categories,
+            brands,
+            sizes
+        });
+    } catch (error) {
+        console.error('Error fetching categories, brands, and sizes:', error);
+        return res.status(500).json({
+            msg: 'Failed to fetch data',
+            error: error.message || 'Internal Server Error'
+        });
+    }
 }
 
 
 
-module.exports = { getSingleProduct, addProductCart, getProductCart, removeCartItem, updateCartItem, filters }
+
+module.exports = { getSingleProduct, addProductCart, getProductCart, removeCartItem, updateCartItem, getCategoryBrandSize }

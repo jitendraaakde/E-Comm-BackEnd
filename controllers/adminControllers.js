@@ -56,20 +56,62 @@ const addCategory = async (req, res) => {
     return res.json({ msg: 'category added', name: response.name })
 }
 const getAllProduct = async (req, res) => {
-    const page = parseInt(req.query.page) || 1; // Page number from query params (default is 1)
-    const limit = parseInt(req.query.limit) || 10; // Number of products per page (default is 10)
+    const filters = req.body;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
     try {
-        const products = await Product.find()
+        let query = {};
+
+        if (filters.Gender) {
+            const genderCategories = await Category.find({ name: filters.Gender });
+            const genderCategoryIds = genderCategories.map((cat) => cat._id);
+            query.category = { $in: genderCategoryIds };
+        }
+
+        if (filters.Category) {
+            const categories = await Category.find({ name: filters.Category });
+            const categoryIds = categories.map((cat) => cat._id);
+            query.category = { $in: [...(query.category ? query.category.$in : []), ...categoryIds] };
+        }
+
+        if (filters.Brand) {
+            const brand = await Brand.findOne({ name: filters.Brand });
+            if (brand) query.brand = brand._id;
+        }
+
+        if (filters.Size) {
+            const size = await Size.findOne({ size: filters.Size });
+            if (size) query.sizes = size._id;
+        }
+
+        let sortCondition = {};
+        switch (filters['Sort By']) {
+            case 'Newest Arrivals':
+                sortCondition.createdAt = -1;
+                break;
+            case 'Price: Low to High':
+                sortCondition.price = 1;
+                break;
+            case 'Price: High to Low':
+                sortCondition.price = -1;
+                break;
+            case 'Discount':
+                sortCondition.discountPercentage = -1;
+                break;
+            default:
+                break;
+        }
+        const products = await Product.find(query)
             .populate('brand')
             .populate('sizes')
             .populate('category')
             .skip(skip)
             .limit(limit)
-            .sort({ createdAt: -1 });
+            .sort(sortCondition);
 
-        const totalProducts = await Product.countDocuments();
+        const totalProducts = await Product.countDocuments(query);
 
         res.status(200).json({
             products,
@@ -82,6 +124,8 @@ const getAllProduct = async (req, res) => {
         res.status(500).json({ message: 'Failed to fetch products' });
     }
 };
+
+
 
 const deleteProduct = async (req, res) => {
     const id = req.params.id;

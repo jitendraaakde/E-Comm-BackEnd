@@ -5,6 +5,6 @@ const { addProduct, getCategory, addCategory, getAllProduct, deleteProduct } = r
 router.post('/add-product', addProduct)
 router.get('/get-category', getCategory)
 router.post('/add-category', addCategory)
-router.get('/all-product', getAllProduct)
+router.post('/all-product', getAllProduct)
 router.delete('/delete-product/:id', deleteProduct)
 module.exports = router;
