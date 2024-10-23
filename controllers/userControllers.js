@@ -199,7 +199,7 @@ const editUserData = async (req, res) => {
 
 const getUserAddresses = async (req, res) => {
     try {
-        const { userId } = req.user; // Assuming `req.user` is populated by some middleware
+        const { userId } = req.user;
         const response = await Address.find({ userId });
 
         if (!response.length) {
