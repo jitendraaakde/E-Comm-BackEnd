@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-
-
 const orderSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -34,9 +32,31 @@ const orderSchema = new mongoose.Schema({
         default: 'pending'
     },
     shippingAddress: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Address',
-        required: true
+        street: {
+            type: String,
+            required: true
+        },
+        city: {
+            type: String,
+            required: true
+        },
+        state: {
+            type: String,
+            required: true
+        },
+        country: {
+            type: String,
+            required: true
+        },
+        zipCode: {
+            type: String,
+            required: true
+        },
+        type: {
+            type: String,
+            enum: ['Home', 'Work', 'Other'],
+            default: 'Home'
+        }
     }
 }, { timestamps: true });
 module.exports = mongoose.model('Orders', orderSchema);

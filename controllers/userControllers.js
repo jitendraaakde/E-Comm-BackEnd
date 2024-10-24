@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const Address = require('../models/AddressModel');
 const Otp = require('../models/OtpModel');
+const Order = require('../models/ordersModel')
 const { emailService } = require('../utils/email');
 
 const signupController = async (req, res) => {
@@ -329,10 +330,47 @@ const logoutUser = (req, res) => {
     return res.status(200).json({ success: true, message: 'Logged out successfully' });
 }
 
+const userPlaceOrder = async (req, res) => {
+    try {
+        const { userId } = req.user;
+        const { productArray, shippingAddress } = req.body;
 
+        console.log('Received order data:', req.body);
+
+        const { street, city, state, country, zipCode, type } = shippingAddress;
+
+        const newOrder = new Order({
+            userId,
+            products: productArray,
+            shippingAddress: {
+                street,
+                city,
+                state,
+                country,
+                zipCode,
+                type,
+            },
+        });
+
+        const savedOrder = await newOrder.save();
+        // populate products from savedOrder
+        console.log('order response', savedOrder)
+        return res.status(201).json({
+            message: 'Your order has been confirmed!',
+            order: savedOrder,
+            success: true
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: 'Failed to place the order. Please try again.',
+            error: error.message,
+            success: false
+        });
+    }
+};
 
 
 module.exports = {
     loginController,
-    signupController, googleAuth, editUserData, getUserAddresses, addUserAddresses, deleteUserAddresses, changeUserPassword, deleteUser, logoutUser, otpController
+    signupController, googleAuth, editUserData, getUserAddresses, addUserAddresses, deleteUserAddresses, changeUserPassword, deleteUser, logoutUser, otpController, userPlaceOrder
 };
