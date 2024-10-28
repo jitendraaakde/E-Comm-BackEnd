@@ -4,6 +4,7 @@ const User = require('../models/userModel');
 const Address = require('../models/AddressModel');
 const Otp = require('../models/OtpModel');
 const Order = require('../models/ordersModel')
+const Cart = require('../models/cartModel')
 const { emailService } = require('../utils/email');
 
 const signupController = async (req, res) => {
@@ -335,8 +336,6 @@ const userPlaceOrder = async (req, res) => {
         const { userId } = req.user;
         const { productArray, shippingAddress } = req.body;
 
-        console.log('Received order data:', req.body);
-
         const { street, city, state, country, zipCode, type } = shippingAddress;
 
         const newOrder = new Order({
@@ -353,24 +352,43 @@ const userPlaceOrder = async (req, res) => {
         });
 
         const savedOrder = await newOrder.save();
-        // populate products from savedOrder
-        console.log('order response', savedOrder)
+
+        const populatedOrder = await Order.findById(savedOrder._id)
+            .populate('products.productId')
+
+        if (populatedOrder) {
+            const cartDelete = await Cart.deleteOne({ userId });
+            console.log('Deleted cart:', cartDelete);
+        }
         return res.status(201).json({
             message: 'Your order has been confirmed!',
-            order: savedOrder,
-            success: true
+            order: populatedOrder,
+            success: true,
         });
     } catch (error) {
+        console.error('Error placing order:', error);
         return res.status(500).json({
             message: 'Failed to place the order. Please try again.',
             error: error.message,
-            success: false
+            success: false,
         });
     }
 };
 
+const userOrdersHistory = async (req, res) => {
+    const { userId } = req.user;
+    try {
+        const orders = await Order.find({ userId }).populate('products.productId');
+        return res.status(200).json({ msg: 'Orders fetched successfully', orders });
+    } catch (error) {
+        console.error('Error in fetching orders:', error);
+        return res.status(500).json({ msg: 'Failed to fetch orders', error: error.message });
+    }
+};
+
+
 
 module.exports = {
     loginController,
-    signupController, googleAuth, editUserData, getUserAddresses, addUserAddresses, deleteUserAddresses, changeUserPassword, deleteUser, logoutUser, otpController, userPlaceOrder
+    signupController, googleAuth, editUserData, getUserAddresses, addUserAddresses, deleteUserAddresses, changeUserPassword, deleteUser, logoutUser, otpController, userPlaceOrder, userOrdersHistory
 };
