@@ -211,7 +211,6 @@ const updateCartItem = async (req, res) => {
 
 
 const getCategoryBrandSize = async (req, res) => {
-    console.log('Category, Brand, and Size fetch request received');
     try {
         const categories = await Category.find({});
         const brands = await Brand.find({});

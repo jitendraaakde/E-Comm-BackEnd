@@ -82,7 +82,6 @@ const emailService = async (email, otp) => {
                 </html>
             `,
         });
-        console.log("Message sent: %s", info.messageId);
     } catch (error) {
         console.error('Error sending email:', error);
     }

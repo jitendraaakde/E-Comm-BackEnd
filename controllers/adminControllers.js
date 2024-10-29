@@ -57,8 +57,6 @@ const addCategory = async (req, res) => {
     return res.json({ msg: 'category added', name: response.name })
 }
 const getAllProduct = async (req, res) => {
-    console.log(req.params)
-    console.log(req.body)
     const filters = req.body;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -130,10 +128,8 @@ const getAllProduct = async (req, res) => {
 
 const getOrders = async (req, res) => {
     try {
-        const response = await Order.find({})
+        const response = await Order.find({}).populate('userId')
         return res.json({ msg: 'order data fetched success', response })
-        //populate (userId)
-        //
     } catch (error) {
         console.log('Error in order', error)
     }

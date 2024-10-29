@@ -358,7 +358,6 @@ const userPlaceOrder = async (req, res) => {
 
         if (populatedOrder) {
             const cartDelete = await Cart.deleteOne({ userId });
-            console.log('Deleted cart:', cartDelete);
         }
         return res.status(201).json({
             message: 'Your order has been confirmed!',
