@@ -231,7 +231,31 @@ const getCategoryBrandSize = async (req, res) => {
     }
 }
 
+const getCategories = async (req, res) => {
+    try {
+        const categories = await Category.find({});
+        res.status(200).json(categories);
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch categories', error: error.message });
+    }
+};
 
+const getProductsByCategory = async (req, res) => {
+    console.log('Get Product by category');
+    const { categoryId } = req.params;
 
+    try {
+        console.log('Fetching products for categoryId:', categoryId);
+        const products = await Product.find({ category: categoryId })
+            .populate('brand', 'name')
+            .populate('sizes', 'size');
 
-module.exports = { getSingleProduct, addProductCart, getProductCart, removeCartItem, updateCartItem, getCategoryBrandSize }
+        console.log('Fetched products:', products);
+        res.status(200).json({ products });
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        res.status(500).json({ message: 'Failed to fetch products', error });
+    }
+};
+
+module.exports = { getSingleProduct, addProductCart, getProductCart, removeCartItem, updateCartItem, getCategoryBrandSize, getProductsByCategory, getCategories }

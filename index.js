@@ -4,6 +4,7 @@ const userRoutes = require('./routes/userRoutes');
 const { dbConnect } = require('./db/dbConnection');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
 const adminRoutes = require('./routes/adminRoutes')
 const productRoutes = require('./routes/productRoutes')
 
@@ -11,10 +12,10 @@ const productRoutes = require('./routes/productRoutes')
 dbConnect();
 
 // Middleware
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());  // Use cookieParser before defining routes
-
+app.use(cookieParser());
 // Routes
 app.use('/api/users/', userRoutes);
 app.use('/api/admin/', adminRoutes);
