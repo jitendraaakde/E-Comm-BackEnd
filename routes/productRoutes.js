@@ -7,7 +7,8 @@ const {
     updateCartItem,
     getCategoryBrandSize,
     getProductsByCategory,
-    getCategories
+    getCategories,
+    imageSliderData,
 } = require('../controllers/productContollers');
 const preventRoutes = require('../auth/routesAccessAuth');
 
@@ -17,6 +18,7 @@ const router = express.Router();
 router.get('/categories', getCategories);
 router.get('/categoryProduct/:categoryId', getProductsByCategory);
 router.get('/category-brand-size', getCategoryBrandSize);
+router.get('/products', imageSliderData)
 
 // Cart-related routes
 router.get('/get-cart-items', preventRoutes, getProductCart);

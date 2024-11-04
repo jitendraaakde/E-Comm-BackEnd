@@ -241,16 +241,13 @@ const getCategories = async (req, res) => {
 };
 
 const getProductsByCategory = async (req, res) => {
-    console.log('Get Product by category');
     const { categoryId } = req.params;
 
     try {
-        console.log('Fetching products for categoryId:', categoryId);
         const products = await Product.find({ category: categoryId })
             .populate('brand', 'name')
             .populate('sizes', 'size');
 
-        console.log('Fetched products:', products);
         res.status(200).json({ products });
     } catch (error) {
         console.error('Error fetching products:', error);
@@ -258,4 +255,15 @@ const getProductsByCategory = async (req, res) => {
     }
 };
 
-module.exports = { getSingleProduct, addProductCart, getProductCart, removeCartItem, updateCartItem, getCategoryBrandSize, getProductsByCategory, getCategories }
+const imageSliderData = async (req, res) => {
+    try {
+        const { category } = req.query;
+        const catObj = await Category.findOne({ name: category });
+        const products = await Product.find({ category: catObj._id })
+        return res.json({ msg: 'Data sent Successfully', products });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+};
+
+module.exports = { getSingleProduct, addProductCart, getProductCart, removeCartItem, updateCartItem, getCategoryBrandSize, getProductsByCategory, getCategories, imageSliderData }

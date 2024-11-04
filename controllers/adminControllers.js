@@ -128,7 +128,10 @@ const getAllProduct = async (req, res) => {
 
 const getOrders = async (req, res) => {
     try {
-        const response = await Order.find({}).populate('userId')
+        const response = await Order.find({})
+            .populate('userId').populate('products.size')
+            .populate('products.productId');
+
         return res.json({ msg: 'order data fetched success', response })
     } catch (error) {
         console.log('Error in order', error)
@@ -137,10 +140,83 @@ const getOrders = async (req, res) => {
     return res.json({ msg: 'All the orders' })
 }
 
+const editOrderStatus = async (req, res) => {
+    const { orderId, newStatus } = req.body;
+    try {
+        await Order.findByIdAndUpdate(orderId, { orderStatus: newStatus });
+
+        const updatedOrder = await Order.find({})
+            .populate('userId')
+            .populate('products.size')
+            .populate('products.productId');
+
+        if (!updatedOrder) {
+            return res.status(404).json({ msg: 'Order not found' });
+        }
+
+        return res.json({ msg: 'Order status updated successfully', response: updatedOrder });
+    } catch (error) {
+        console.log('Error updating order:', error);
+        return res.status(500).json({ msg: 'Internal server error' });
+    }
+};
+
+
 const deleteProduct = async (req, res) => {
     const id = req.params.id;
     const response = await Product.deleteOne({ _id: id })
     res.json({ msg: 'One product deleted' })
 }
+const adminDashboardData = async (req, res) => {
+    try {
+        const totalProducts = await Product.countDocuments();
+        const totalOrders = await Order.countDocuments();
 
-module.exports = { addProduct, getCategory, addCategory, getAllProduct, deleteProduct, getOrders };
+        const orders = await Order.find({}).populate('products.productId');
+
+        const totalRevenue = orders.reduce((sum, order) => {
+            return sum + order.products.reduce((orderSum, product) => {
+                return orderSum + product.amount * product.quantity;
+            }, 0);
+        }, 0);
+
+        const monthlySales = {};
+
+        orders.forEach((order) => {
+            const month = new Date(order.createdAt).toLocaleString('default', { month: 'short' });
+            const year = new Date(order.createdAt).getFullYear();
+            const monthYear = `${month} ${year}`;
+
+            if (!monthlySales[monthYear]) monthlySales[monthYear] = 0;
+
+            order.products.forEach((product) => {
+                monthlySales[monthYear] += product.amount * product.quantity;
+            });
+        });
+
+        const salesData = Object.keys(monthlySales).map((month) => ({
+            name: month,
+            sales: monthlySales[month],
+        }));
+
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const newProductsThisWeek = await Product.countDocuments({ createdAt: { $gte: oneWeekAgo } });
+
+        res.json({
+            stats: {
+                totalProducts,
+                totalOrders,
+                totalRevenue,
+                newProductsThisWeek,
+            },
+            salesData,
+        });
+    } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+        res.status(500).json({ message: 'Failed to fetch dashboard data' });
+    }
+};
+
+
+module.exports = { addProduct, getCategory, addCategory, getAllProduct, deleteProduct, getOrders, editOrderStatus, adminDashboardData };
