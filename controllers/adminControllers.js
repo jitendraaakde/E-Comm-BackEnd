@@ -58,6 +58,7 @@ const addCategory = async (req, res) => {
 }
 const getAllProduct = async (req, res) => {
     const filters = req.body;
+    console.log('Filters', filters)
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
