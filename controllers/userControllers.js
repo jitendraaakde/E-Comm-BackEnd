@@ -108,12 +108,12 @@ const loginController = async (req, res) => {
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(401).json({ message: 'User not exist please signup' });
+            return res.status(401).json({ message: 'User not exist please signup', success: false });
         }
         const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
         if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Invalid password.' });
+            return res.status(401).json({ message: 'Invalid password.', success: false });
         }
         const token = jwt.sign(
             {
@@ -127,9 +127,7 @@ const loginController = async (req, res) => {
         });
 
         const { passwordHash, ...userResponse } = user._doc;
-
-
-        res.status(200).json({ message: 'Login successful.', user: userResponse });
+        res.status(200).json({ message: 'Login successful.', user: userResponse, success: true });
     } catch (error) {
         console.error('Login error:', error.message);
         res.status(500).json({ message: 'Server error. Please try again later.' });
@@ -180,6 +178,8 @@ const editUserData = async (req, res) => {
     try {
         const userId = req.user.userId;
         const updatedData = req.body;
+        const { email, name, phone } = req.body
+        console.log(typeof phone)
 
 
         const user = await User.findByIdAndUpdate(
@@ -191,8 +191,9 @@ const editUserData = async (req, res) => {
         if (!user) {
             return res.status(404).json({ msg: 'User not found' });
         }
+        const { passwordHash, ...userResponse } = user._doc;
 
-        res.json({ msg: 'User updated successfully', user });
+        res.json({ msg: 'User updated successfully', user: userResponse });
     } catch (error) {
         console.error('Error updating user:', error);
         res.status(500).json({ msg: 'Server error' });
