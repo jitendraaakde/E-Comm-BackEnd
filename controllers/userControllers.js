@@ -6,6 +6,8 @@ const Otp = require('../models/OtpModel');
 const Order = require('../models/ordersModel')
 const Cart = require('../models/cartModel')
 const { emailService } = require('../utils/email');
+const shortid = require('shortid');
+
 
 const signupController = async (req, res) => {
     const { name, email, passwordHash } = req.body;
@@ -101,38 +103,40 @@ const otpController = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
     }
 };
-
 const loginController = async (req, res) => {
     const { email, password } = req.body;
 
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(401).json({ message: 'User not exist please signup', success: false });
+            return res.status(401).json({ message: 'User does not exist. Please sign up.', success: false });
         }
-        const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
+        const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Invalid password.', success: false });
         }
+
         const token = jwt.sign(
-            {
-                userId: user._id,
-            },
-            process.env.JWT_SECRET);
+            { userId: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'Strict'
+            sameSite: 'Strict',
         });
 
         const { passwordHash, ...userResponse } = user._doc;
         res.status(200).json({ message: 'Login successful.', user: userResponse, success: true });
     } catch (error) {
         console.error('Login error:', error.message);
-        res.status(500).json({ message: 'Server error. Please try again later.' });
+        res.status(500).json({ message: 'Server error. Please try again later.', success: false });
     }
 };
+
 
 
 const googleAuth = async (req, res) => {
@@ -266,7 +270,10 @@ const changeUserPassword = async (req, res) => {
         const { currentPassword, confirmPassword } = req.body;
         const { userId } = req.user;
 
+        console.log('userId', userId, 'req.body', req.body)
+
         const user = await User.findOne({ _id: userId });
+        console.log('user', user)
 
         if (!user) {
             return res.status(404).json({ msg: 'User not found' });
@@ -339,6 +346,9 @@ const userPlaceOrder = async (req, res) => {
 
         const { street, city, state, country, zipCode, type } = shippingAddress;
 
+        const orderId = shortid.generate();
+        console.log('orderId', orderId)
+
         const newOrder = new Order({
             userId,
             products: productArray,
@@ -350,6 +360,7 @@ const userPlaceOrder = async (req, res) => {
                 zipCode,
                 type,
             },
+            orderId: orderId
         });
 
         const savedOrder = await newOrder.save();

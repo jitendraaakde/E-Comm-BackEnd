@@ -209,7 +209,6 @@ const updateCartItem = async (req, res) => {
     }
 };
 
-
 const getCategoryBrandSize = async (req, res) => {
     try {
         const categories = await Category.find({});

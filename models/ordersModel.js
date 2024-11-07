@@ -57,6 +57,10 @@ const orderSchema = new mongoose.Schema({
             enum: ['Home', 'Work', 'Other'],
             default: 'Home'
         }
+    },
+    orderId: {
+        type: String,
     }
+
 }, { timestamps: true });
 module.exports = mongoose.model('Orders', orderSchema);
