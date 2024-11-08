@@ -105,6 +105,7 @@ const otpController = async (req, res) => {
 };
 const loginController = async (req, res) => {
     const { email, password } = req.body;
+    console.log('login', email, password)
 
     try {
         const user = await User.findOne({ email });
@@ -136,8 +137,6 @@ const loginController = async (req, res) => {
         res.status(500).json({ message: 'Server error. Please try again later.', success: false });
     }
 };
-
-
 
 const googleAuth = async (req, res) => {
     const { name, email } = req.body;
@@ -397,9 +396,120 @@ const userOrdersHistory = async (req, res) => {
     }
 };
 
+const forgetPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ success: false, msg: "Email is required" });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, msg: "User does not exist. Please sign up." });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+        await Otp.create({
+            userId: user._id,
+            otp,
+            expiresAt,
+        });
+
+        emailService(email, otp);
+
+        return res.status(201).json({
+            success: true,
+            message: 'OTP sent to your email.',
+            email
+        });
+    } catch (error) {
+        console.error("Error in forgetPassword:", error);
+        return res.status(500).json({
+            success: false,
+            msg: "An error occurred while processing your request. Please try again later.",
+        });
+    }
+};
+
+const handleForgetPasswordOtp = async (req, res) => {
+    try {
+        const { otp, email } = req.body;
+
+        console.log('OTP and EMAIL:', typeof otp, typeof email);
+
+        if (!otp || !email) {
+            return res.status(400).json({ success: false, message: 'OTP and email are required.' });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+
+        const otpData = await Otp.findOne({ userId: user._id });
+        if (!otpData) {
+            return res.status(404).json({ success: false, message: 'OTP not found. Please request a new one.' });
+        }
+
+        if (Number(otp) !== Number(otpData.otp)) {
+            return res.status(400).json({ success: false, message: 'Invalid OTP. Please try again.' });
+        }
+
+        if (otpData.expiresAt < new Date()) {
+            await Otp.deleteOne({ userId: user._id });
+            return res.status(400).json({ success: false, message: 'OTP expired. Please request a new one.' });
+        }
+
+        await Otp.deleteOne({ userId: user._id });
+
+        return res.status(200).json({ success: true, message: 'OTP verified successfully.' });
+
+    } catch (error) {
+        console.error("Error in handleForgetPasswordOtp:", error);
+        return res.status(500).json({
+            success: false,
+            message: 'An error occurred while processing your request. Please try again later.',
+        });
+    }
+};
+
+
+const handleNewPassword = async (req, res) => {
+    try {
+        const { password, email } = req.body;
+
+        console.log(req.body);
+
+        if (!password || !email) {
+            return res.status(400).json({ success: false, msg: 'Email and password are required.' });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, msg: 'User not found. Please sign up.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const status = await User.findByIdAndUpdate(user._id, { passwordHash: hashedPassword }, { new: true });
+
+        if (status) {
+            return res.status(200).json({ success: true, msg: 'Password changed successfully.' });
+        }
+
+        return res.status(500).json({ success: false, msg: 'Error updating password.' });
+
+    } catch (error) {
+        console.error("Error in handleNewPassword:", error);
+        return res.status(500).json({ success: false, msg: 'An error occurred. Please try again later.' });
+    }
+};
 
 
 module.exports = {
     loginController,
-    signupController, googleAuth, editUserData, getUserAddresses, addUserAddresses, deleteUserAddresses, changeUserPassword, deleteUser, logoutUser, otpController, userPlaceOrder, userOrdersHistory
+    signupController, googleAuth, editUserData, getUserAddresses, addUserAddresses, deleteUserAddresses, changeUserPassword, deleteUser, logoutUser, otpController, userPlaceOrder, userOrdersHistory, forgetPassword, handleForgetPasswordOtp, handleNewPassword
 };
