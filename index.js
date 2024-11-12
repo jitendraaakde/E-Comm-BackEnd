@@ -12,7 +12,12 @@ const productRoutes = require('./routes/productRoutes')
 dbConnect();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: ['https://e-commerce-jitu.netlify.app/'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
