@@ -13,11 +13,12 @@ dbConnect();
 
 // Middleware
 app.use(cors({
-    origin: ['https://e-commerce-jitu.netlify.app/'],
+    origin: ['https://e-commerce-jitu.netlify.app', 'http://localhost:3000'],  // Allow local and prod
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
 }));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
