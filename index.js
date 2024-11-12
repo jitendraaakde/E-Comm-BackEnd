@@ -22,7 +22,6 @@ app.use('/api/admin/', adminRoutes);
 app.use('/api/product/', productRoutes);
 
 // Start the server
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(process.env.PORT, () => {
+    console.log(`Server is running on `, process.env.PORT);
 });
